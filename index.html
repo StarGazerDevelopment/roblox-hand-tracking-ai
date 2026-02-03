@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hand Tracking (MediaPipe) – Phase 1</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>Hand Tracking – Runs Locally</h1>
+    <p>Uses MediaPipe Hands in the browser. Performance depends on your device; it may be slower on low-end hardware.</p>
+  </header>
+
+  <main>
+    <div id="video-container">
+      <video id="video" playsinline></video>
+      <canvas id="overlay"></canvas>
+
+      <div id="status">
+        <span id="fps">FPS: 0</span>
+        <span id="no-hands" class="hidden">No hand detected</span>
+        <span id="error" class="hidden"></span>
+      </div>
+    </div>
+
+    <button id="startBtn" class="hidden">Start Camera</button>
+  </main>
+
+  <footer class="app-footer">
+    <small>Optimizes CPU/GPU usage conservatively to avoid lag. Works in Chrome and Edge.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+<script>
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    document.getElementById('error').classList.remove('hidden');
+    document.getElementById('error').textContent = 'Error: getUserMedia is not supported in this browser.';
+  }
+</script>
+</html>

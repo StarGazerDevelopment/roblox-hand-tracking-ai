@@ -5,6 +5,7 @@ const fpsEl = document.getElementById('fps');
 const noHandsEl = document.getElementById('no-hands');
 const errorEl = document.getElementById('error');
 const startBtn = document.getElementById('startBtn');
+const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('hand-data') : null;
 
 let lastFpsTime = performance.now();
 let frameCount = 0;
@@ -19,6 +20,115 @@ const HAND_CONNECTIONS = [
   [0, 13], [13, 14], [14, 15], [15, 16],
   [0, 17], [17, 18], [18, 19], [19, 20]
 ];
+
+function idleWorldHand() {
+  return [
+    { x: 0.0, y: -0.05, z: 0.02 },
+    { x: 0.02, y: -0.03, z: 0.015 },
+    { x: 0.035, y: -0.01, z: 0.01 },
+    { x: 0.05, y: 0.01, z: 0.005 },
+    { x: 0.065, y: 0.03, z: 0.0 },
+    { x: 0.015, y: 0.0, z: 0.015 },
+    { x: 0.02, y: 0.03, z: 0.01 },
+    { x: 0.02, y: 0.06, z: 0.005 },
+    { x: 0.02, y: 0.09, z: 0.0 },
+    { x: 0.0, y: 0.0, z: 0.015 },
+    { x: 0.0, y: 0.035, z: 0.01 },
+    { x: 0.0, y: 0.07, z: 0.005 },
+    { x: 0.0, y: 0.105, z: 0.0 },
+    { x: -0.015, y: 0.0, z: 0.015 },
+    { x: -0.015, y: 0.03, z: 0.01 },
+    { x: -0.015, y: 0.06, z: 0.005 },
+    { x: -0.015, y: 0.09, z: 0.0 },
+    { x: -0.03, y: -0.005, z: 0.015 },
+    { x: -0.03, y: 0.02, z: 0.01 },
+    { x: -0.03, y: 0.045, z: 0.005 },
+    { x: -0.03, y: 0.07, z: 0.0 }
+  ];
+}
+let lastWorldHands = null;
+const modelCanvas = document.getElementById('model');
+const modelCtx = modelCanvas ? modelCanvas.getContext('2d') : null;
+const modelLabelEl = document.getElementById('modelLabel');
+const modelHandsEl = document.getElementById('modelHands');
+
+function resizeModelCanvas() {
+  if (!modelCanvas) return;
+  const w = modelCanvas.clientWidth || modelCanvas.parentElement.clientWidth;
+  const h = modelCanvas.clientHeight || modelCanvas.parentElement.clientHeight;
+  const rect = modelCanvas.parentElement.getBoundingClientRect();
+  const cw = Math.floor(rect.width);
+  const ch = Math.floor(rect.height);
+  if (cw && ch && (modelCanvas.width !== cw || modelCanvas.height !== ch)) {
+    modelCanvas.width = cw;
+    modelCanvas.height = ch;
+  }
+}
+
+function rotMatrix(yaw, pitch) {
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  return [
+    [ cy, 0, sy ],
+    [ sy*sp, cp, -cy*sp ],
+    [ -sy*cp, sp, cy*cp ]
+  ];
+}
+function applyRot(p, m) {
+  return {
+    x: p.x*m[0][0] + p.y*m[0][1] + p.z*m[0][2],
+    y: p.x*m[1][0] + p.y*m[1][1] + p.z*m[1][2],
+    z: p.x*m[2][0] + p.y*m[2][1] + p.z*m[2][2]
+  };
+}
+function project3D(pt, scale) {
+  const d = 0.6;
+  const z = pt.z + d;
+  const f = scale;
+  return {
+    x: modelCanvas.width*0.5 + (pt.x * f) / Math.max(0.1, z),
+    y: modelCanvas.height*0.5 - (pt.y * f) / Math.max(0.1, z)
+  };
+}
+function drawHand3DWorld(points, label) {
+  if (!modelCtx || !modelCanvas) return;
+  resizeModelCanvas();
+  modelCtx.clearRect(0, 0, modelCanvas.width, modelCanvas.height);
+  const center = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y, z: acc.z + p.z }), { x: 0, y: 0, z: 0 });
+  center.x /= points.length; center.y /= points.length; center.z /= points.length;
+  const centered = points.map(p => ({ x: p.x - center.x, y: -(p.y - center.y), z: p.z - center.z }));
+  const m = rotMatrix(0, 0);
+  const rotated = centered.map(p => applyRot(p, m));
+  let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+  for (const p of rotated) {
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.z < minZ) minZ = p.z;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+    if (p.z > maxZ) maxZ = p.z;
+  }
+  const dx = maxX - minX, dy = maxY - minY, dz = maxZ - minZ;
+  const diag = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
+  const scale = Math.min(modelCanvas.width, modelCanvas.height) * 0.65;
+  const s = scale / diag;
+  modelCtx.lineWidth = 2;
+  modelCtx.strokeStyle = '#22d3ee';
+  modelCtx.beginPath();
+  for (const [a,b] of HAND_CONNECTIONS) {
+    const pa = project3D(rotated[a], s);
+    const pb = project3D(rotated[b], s);
+    modelCtx.moveTo(pa.x, pa.y);
+    modelCtx.lineTo(pb.x, pb.y);
+  }
+  modelCtx.stroke();
+  modelCtx.fillStyle = '#34d399';
+  for (const p of rotated) {
+    const pp = project3D(p, s);
+    modelCtx.fillRect(pp.x - 3, pp.y - 3, 6, 6);
+  }
+  if (modelLabelEl) modelLabelEl.textContent = `Model: ${label || '-'}`;
+}
 
 function resizeCanvas() {
   const w = video.videoWidth || canvas.clientWidth;
@@ -107,6 +217,60 @@ function onResults(results) {
       for (const p of points) {
         drawSquare(p.x, p.y, 6, '#34d399');
       }
+    }
+  }
+
+  if (bc) {
+    let worldHands = null;
+    if (Array.isArray(results.multiHandWorldLandmarks) && results.multiHandWorldLandmarks.length > 0) {
+      worldHands = results.multiHandWorldLandmarks.map(hand => hand.map(lm => ({ x: lm.x, y: lm.y, z: lm.z })));
+      lastWorldHands = worldHands;
+    } else if (Array.isArray(results.multiHandLandmarks) && results.multiHandLandmarks.length > 0) {
+      worldHands = results.multiHandLandmarks.map(hand => hand.map(lm => ({
+        x: lm.x - 0.5,
+        y: lm.y - 0.5,
+        z: lm.z
+      })));
+      lastWorldHands = worldHands;
+    } else if (lastWorldHands) {
+      worldHands = lastWorldHands;
+    } else {
+      worldHands = [idleWorldHand()];
+    }
+    const classify = (pts) => {
+      let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+      for (const p of pts) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.z < minZ) minZ = p.z;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+        if (p.z > maxZ) maxZ = p.z;
+      }
+      const dx = maxX - minX, dy = maxY - minY, dz = maxZ - minZ;
+      const diag = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+      let sum = 0, cnt = 0;
+      for (const [a, b] of HAND_CONNECTIONS) {
+        const pa = pts[a], pb = pts[b];
+        const lx = pa.x - pb.x, ly = pa.y - pb.y, lz = pa.z - pb.z;
+        sum += Math.sqrt(lx * lx + ly * ly + lz * lz);
+        cnt++;
+      }
+      const avg = sum / Math.max(cnt, 1);
+      const ratio = avg / diag;
+      let label = 'Medium';
+      if (ratio < 0.09) label = 'Small';
+      else if (ratio > 0.14) label = 'Large';
+      return { bbox: { dx, dy, dz, diag }, avgBone: avg, ratio, label };
+    };
+    const meta = worldHands.map(classify);
+    bc.postMessage({ ts: performance.now(), hands: worldHands, meta });
+    if (worldHands && worldHands.length > 0) {
+      drawHand3DWorld(worldHands[0], meta && meta[0] ? meta[0].label : 'Live');
+      if (modelHandsEl) modelHandsEl.textContent = `Hands: ${worldHands.length}`;
+    } else {
+      drawHand3DWorld(idleWorldHand(), 'Idle');
+      if (modelHandsEl) modelHandsEl.textContent = `Hands: 0`;
     }
   }
 

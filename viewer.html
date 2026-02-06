@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Hand Viewer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>3D Hand Viewer</h1>
+    <p>Powered By Google's Mediapipe</p>
+  </header>
+  <main>
+    <div id="video-container">
+      <video id="viewerVideo" playsinline style="display:none"></video>
+      <canvas id="viewer"></canvas>
+      <div id="status">
+        <span id="modelLabel">Model: -</span>
+        <span id="handCount">Hands: 0</span>
+        <span id="viewerFps">FPS: 0</span>
+        <span id="viewerError" class="hidden"></span>
+      </div>
+    </div>
+  </main>
+  <footer class="app-footer">
+    <small>Drag to rotate. Uses world landmarks broadcast from the tracker page.</small>
+  </footer>
+  <script src="viewer.js"></script>
+</body>
+</html>

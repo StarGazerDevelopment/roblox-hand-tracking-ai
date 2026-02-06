@@ -9,8 +9,6 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>Hand Tracking – Runs Locally</h1>
-    <p>Uses MediaPipe Hands in the browser. Performance depends on your device; it may be slower on low-end hardware.</p>
   </header>
 
   <main>
@@ -26,10 +24,18 @@
     </div>
 
     <button id="startBtn" class="hidden">Start Camera</button>
+
+    <div id="model-container">
+      <canvas id="model"></canvas>
+      <div id="model-status">
+        <span id="modelLabel">Model: -</span>
+        <span id="modelHands">Hands: 0</span>
+      </div>
+    </div>
   </main>
 
   <footer class="app-footer">
-    <small>Optimizes CPU/GPU usage conservatively to avoid lag. Works in Chrome and Edge.</small>
+    <small>Powered By Google's Mediapipe</small>
   </footer>
 
   <script src="app.js"></script>

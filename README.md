@@ -38,6 +38,8 @@ Use the Live Server extension to serve the project folder.
 - `index.html` – page markup and script tags
 - `styles.css` – layout and overlay styles
 - `app.js` – camera, MediaPipe Hands, drawing and FPS
+- `viewer.html` – separate 3D viewer page
+- `viewer.js` – 3D projection, rotation, and model classification
 
 ## Deploy (Vercel via GitHub)
 Once pushed to GitHub, you can import this repository in Vercel and deploy as a static site. No server code required.
@@ -64,3 +66,8 @@ gh repo create StarGazerDevelopment/roblox-hand-tracking-cloud-ai --public --sou
 - Uses official MediaPipe Hands JS via CDN and WebAssembly assets.
 - Adaptive performance adjusts model complexity to maintain ≥25 FPS where possible, without overusing CPU/GPU.
 - This is Phase 1; a future phase will stream landmark data to a Roblox game.
+
+## 3D Viewer Usage
+- Open `index.html` on localhost and grant camera permission. It broadcasts world landmarks locally via `BroadcastChannel`.
+- Open `viewer.html` in another tab at the same localhost origin to see the 3D viewer.
+- Drag to rotate the 3D skeleton. The viewer classifies the model size as Small/Medium/Large based on average bone length relative to the hand’s 3D bounding box.

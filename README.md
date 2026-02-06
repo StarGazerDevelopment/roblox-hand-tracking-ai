@@ -1,73 +1,30 @@
-# Hand Tracking (MediaPipe) – Phase 1
+# Hand Tracking (MediaPipe)
 
-Real-time, browser-based hand tracking using MediaPipe Hands. No frameworks; HTML + CSS + Vanilla JS. Tracks up to two hands and renders landmarks/bones/bounding boxes over a mirrored live video feed.
+Real-time, browser-based hand tracking powered by Google’s MediaPipe. Tracks up to two hands and overlays landmarks, bones, and bounding boxes directly on the live camera feed. Includes a rotatable 3D model view.
 
-## Features
-- Accesses webcam (with permission) and starts automatically
-- MediaPipe Hands (WebAssembly) in the browser
-- Tracks up to 2 hands, 21 landmarks per hand
-- Canvas overlay: bounding boxes, square joints, and bone lines
-- Smooth rendering with `requestAnimationFrame`
-- FPS counter and “No hand detected” message
-- Horizontal mirror mode (selfie) for intuitive interaction
-- Handles resize/orientation changes
-- Conservative adaptive performance to avoid lag
-- Works in Chrome and Edge
+## How It Works
+- Uses MediaPipe Hands (WebAssembly) entirely in the browser.
+- Accesses your webcam (with permission) and starts tracking automatically.
+- Detects 21 landmarks per hand for up to 2 hands.
+- Draws:
+  - Bounding box for each detected hand
+  - Small squares for each joint/landmark
+  - Lines between joints to show finger bones
+- Smooth rendering via `requestAnimationFrame` on a Canvas overlay.
+- Shows live FPS and a “No hand detected” message when empty.
+- Handles resize/orientation and flips video horizontally (mirror mode) for intuitive interaction.
 
-## Run Locally
-This app runs locally. Performance depends on your device; it may be slower on low-end hardware.
+## Components
+- `index.html` — Main page with live camera and overlay
+- `styles.css` — Layout and visual styles
+- `app.js` — Camera access, MediaPipe Hands integration, overlays, FPS, and inline 3D model
+- `viewer.html` — Standalone 3D viewer page
+- `viewer.js` — 3D projection and rotation; consumes world landmarks
 
-Because the camera API requires a secure origin, run from `http://localhost`:
+## Usage
+- Open the site, allow camera permission, and move your hands in view.
+- Open `viewer.html` for a 3D skeleton view; drag to rotate.
+- Works in Chrome and Edge.
 
-### Option A: Node (http-server)
-```bash
-npx http-server -p 8080 .
-```
-Open `http://localhost:8080` in Chrome or Edge.
-
-### Option B: Python
-```bash
-python -m http.server 8080
-```
-Open `http://localhost:8080`.
-
-### Option C: VS Code Live Server
-Use the Live Server extension to serve the project folder.
-
-## Source Structure
-- `index.html` – page markup and script tags
-- `styles.css` – layout and overlay styles
-- `app.js` – camera, MediaPipe Hands, drawing and FPS
-- `viewer.html` – separate 3D viewer page
-- `viewer.js` – 3D projection, rotation, and model classification
-
-## Deploy (Vercel via GitHub)
-Once pushed to GitHub, you can import this repository in Vercel and deploy as a static site. No server code required.
-
-## Push to GitHub
-Target: `https://github.com/StarGazerDevelopment/roblox-hand-tracking-cloud-ai.git`
-
-If the repository already exists and you have access:
-```bash
-git init
-git add .
-git commit -m "Phase 1: Browser hand tracking with MediaPipe"
-git branch -M main
-git remote add origin https://github.com/StarGazerDevelopment/roblox-hand-tracking-cloud-ai.git
-git push -u origin main
-```
-
-If it does not exist yet, create it under your GitHub account (public or private), then run the commands above. If your environment requires authentication, configure a token or use `gh` CLI:
-```bash
-gh repo create StarGazerDevelopment/roblox-hand-tracking-cloud-ai --public --source . --remote origin --push
-```
-
-## Notes
-- Uses official MediaPipe Hands JS via CDN and WebAssembly assets.
-- Adaptive performance adjusts model complexity to maintain ≥25 FPS where possible, without overusing CPU/GPU.
-- This is Phase 1; a future phase will stream landmark data to a Roblox game.
-
-## 3D Viewer Usage
-- Open `index.html` on localhost and grant camera permission. It broadcasts world landmarks locally via `BroadcastChannel`.
-- Open `viewer.html` in another tab at the same localhost origin to see the 3D viewer.
-- Drag to rotate the 3D skeleton. The viewer classifies the model size as Small/Medium/Large based on average bone length relative to the hand’s 3D bounding box.
+## Credits
+- Powered by Google’s MediaPipe

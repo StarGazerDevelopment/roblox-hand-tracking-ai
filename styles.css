@@ -28,10 +28,19 @@ html, body {
 .app-footer {
   color: #9aa0a6;
 }
+#root, body, html {
+  height: 100%;
+}
+.page-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding: 0 12px;
+}
 #video-container {
   position: relative;
-  max-width: 960px;
-  margin: 16px auto;
+  width: 100%;
+  margin: 16px 0;
   aspect-ratio: 16 / 9;
   background: #111318;
   border-radius: 8px;
@@ -97,8 +106,8 @@ canvas {
 
 #model-container {
   position: relative;
-  max-width: 960px;
-  margin: 12px auto 24px auto;
+  width: 100%;
+  margin: 12px 0 24px 0;
   aspect-ratio: 16 / 9;
   background: #101114;
   border-radius: 8px;
@@ -123,4 +132,14 @@ canvas {
   background: rgba(0,0,0,0.35);
   border-radius: 18px;
   backdrop-filter: blur(4px);
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  .page-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  #video-container, #model-container {
+    margin: 16px 0;
+  }
 }

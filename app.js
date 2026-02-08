@@ -6,6 +6,12 @@ const noHandsEl = document.getElementById('no-hands');
 const errorEl = document.getElementById('error');
 const startBtn = document.getElementById('startBtn');
 const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('hand-data') : null;
+let swReady = false;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.ready.then(() => {
+    swReady = true;
+  });
+}
 
 let lastFpsTime = performance.now();
 let frameCount = 0;
@@ -265,6 +271,16 @@ function onResults(results) {
     };
     const meta = worldHands.map(classify);
     bc.postMessage({ ts: performance.now(), hands: worldHands, meta });
+    if (swReady) {
+      const msg = { type: 'landmarksUpdate', ts: performance.now(), hands: worldHands, meta };
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(msg);
+      } else {
+        navigator.serviceWorker.ready.then(reg => {
+          if (reg.active) reg.active.postMessage(msg);
+        });
+      }
+    }
     if (worldHands && worldHands.length > 0) {
       drawHand3DWorld(worldHands[0], meta && meta[0] ? meta[0].label : 'Live');
       if (modelHandsEl) modelHandsEl.textContent = `Hands: ${worldHands.length}`;

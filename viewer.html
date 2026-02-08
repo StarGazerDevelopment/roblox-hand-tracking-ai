@@ -28,5 +28,10 @@
     <small>Drag to rotate. Uses world landmarks broadcast from the tracker page.</small>
   </footer>
   <script src="viewer.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
 </body>
 </html>

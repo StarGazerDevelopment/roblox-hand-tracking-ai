@@ -213,10 +213,16 @@ function onResults(results) {
     const worldHands = results.multiHandWorldLandmarks.map(hand => hand.map(lm => ({ x: lm.x, y: lm.y, z: lm.z })));
     const meta = worldHands.map(() => ({ label: 'Live' }));
     lastData = { ts: performance.now(), hands: worldHands, meta };
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'landmarksUpdate', ts: performance.now(), hands: worldHands, meta });
+    }
   } else if (Array.isArray(results.multiHandLandmarks) && results.multiHandLandmarks.length > 0) {
     const imgHands = results.multiHandLandmarks.map(hand => hand.map(lm => ({ x: lm.x - 0.5, y: lm.y - 0.5, z: lm.z })));
     const meta = imgHands.map(() => ({ label: 'Live2D' }));
     lastData = { ts: performance.now(), hands: imgHands, meta };
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'landmarksUpdate', ts: performance.now(), hands: imgHands, meta });
+    }
   }
   updateFps();
 }
